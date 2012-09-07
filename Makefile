@@ -1,7 +1,7 @@
 
-CXX		= g++-4.7
+CXX		= g++
 
-CFLAGS		= -Wall -Wextra -std=c++11 -Ilocal/include
+CFLAGS		= -Wall -Wextra -std=c++0x -Ilocal/include
 
 LDFLAGS		= -Llocal/lib
 

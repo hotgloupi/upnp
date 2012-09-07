@@ -16,6 +16,7 @@ public:
     int res = sendpublicaddressrequest(&_natpmp);
     if (res != 2)
       throw std::runtime_error("couldn't request public address");
+    printf("Retreive external ip address\n");
     natpmpresp_t response;
     res = _wait_response(&response);
     if (res != 0)
@@ -29,6 +30,9 @@ public:
                    uint16_t public_port,
                    uint32_t lifetime = 3600)
   {
+    printf("Request a tcp port mapping from %d (public) to %d (private) ports",
+           public_port,
+           private_port);
     _port_mapping(NATPMP_PROTOCOL_TCP, private_port, public_port, lifetime);
   }
 
@@ -37,6 +41,9 @@ public:
                    uint16_t public_port,
                    uint32_t lifetime = 3600)
   {
+    printf("Request an udp port mapping from %d (public) to %d (private) ports",
+           public_port,
+           private_port);
     _port_mapping(NATPMP_PROTOCOL_UDP, private_port, public_port, lifetime);
   }
 
@@ -47,19 +54,23 @@ private:
     int retry = NATPMP_TRYAGAIN;
     while (retry == NATPMP_TRYAGAIN)
     {
-      struct timeval timeout;
-      if (::getnatpmprequesttimeout(&_natpmp, &timeout))
-        throw std::runtime_error("couldn't request natpmp timeout");
 
       fd_set fds;
       FD_ZERO(&fds);
       FD_SET(_natpmp.s, &fds);
-      int res = ::select(_natpmp.s + 1, &fds, NULL, NULL, &timeout);
+      int res;
+
+      {
+          struct timeval timeout;
+          if (::getnatpmprequesttimeout(&_natpmp, &timeout))
+              throw std::runtime_error("couldn't request natpmp timeout");
+          printf("Checking socket fd\n");
+          res = ::select(_natpmp.s + 1, &fds, NULL, NULL, &timeout);
+      }
+
       if (res < 0)
         throw std::runtime_error("couldn't check socket fd");
-      else if (res == 0)
-        throw std::runtime_error("timer expired");
-      retry = readnatpmpresponseorretry(&_natpmp, response);
+      retry = ::readnatpmpresponseorretry(&_natpmp, response);
       if (retry == NATPMP_TRYAGAIN)
         printf("Trying again\n");
     }
