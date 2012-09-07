@@ -1,5 +1,5 @@
 
-CXX		= g++
+CXX		?= g++
 
 CFLAGS		= -Wall -Wextra -std=c++0x -Ilocal/include
 
